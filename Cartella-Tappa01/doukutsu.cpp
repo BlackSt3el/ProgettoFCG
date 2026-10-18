@@ -2,10 +2,9 @@
 
 const char* window_title = "DoukutsuClone";
 
-int XIndex = 0;
-int YIndex = 0;
+int QuoteXIndex = 0;
+int QuoteYIndex = 0;
 int frameCounter = 0;
-
 
 //------------------------------------ Window/View ------------------------------------//
 
@@ -58,60 +57,42 @@ struct State
 
     sf::ContextSettings settings;
 
-    sf::Texture playerTexture;
-
-    sf::Sprite playerSprite{playerTexture};
-
-    Entity player;
-    Entity entity;
-
-
-    Entity entityBuff[2] = {player,entity};
+    Entity player{quoteTexture};
 
     State(){
-//------------------------------------ Textures ------------------------------------//
-        if(!playerTexture.loadFromFile("./../Cartella-risorse/DoukutsuCharSprites.png")){
-            std::cout << "Image Failed to load" << std::endl;
-        }
-        else{
-            std::cout << "Image Loaded" << std::endl;
-            playerSprite.setTexture(playerTexture, true);
-            quoteCycleSprite(XIndex, YIndex, playerSprite);
-            auto r = playerSprite.getTextureRect();
-            playerSprite.setOrigin({r.size.x / 2.f, r.size.y / 2.f});
-        }   
-//------------------------------------ Textures ------------------------------------//
         settings.antiAliasingLevel = 8;
     }
 
-
+    void updatePlayer(float elapsed);
     void update(float elapsed);
     void drawFrame(sf::RenderWindow& window);
     void restart();
 };
 
-void State::update(float elapsed){ 
-    if(paused) return;
+void State::updatePlayer(float elapsed){
+    updateEntity(player, elapsed);
+
+    quoteSpriteDirection(player,player.charSprite, player.gunSprite);
+
+    quoteUpdateAnimation(player, elapsed);
     
-    moveVelCheck(player, elapsed);
+    player.hitbox.setPosition(player.pos);
+    player.charSprite.setPosition(player.pos);
+    gunUpdateSprite(player);
+}
 
-    boundaryCheck(player, rectangleSize.y, rectangleSize.x);
-
-    player.rectangle.setPosition(player.pos);
-
-    if(frameCounter == 59){
-        quoteCycleSprite(XIndex, YIndex, playerSprite);
-        XIndex++;
-        if(XIndex == 11)YIndex = (YIndex+1)%3;
-        XIndex %= 11;
+void State::update(float elapsed){ 
+    if(paused) {
+        return;
     }
-    playerSprite.setPosition(player.rectangle.getPosition());
+    updatePlayer(elapsed);
 }
 
 void State::drawFrame(sf::RenderWindow& window){
-    window.draw(player.rectangle);
-    window.draw(playerSprite);
-    frameCounter = (frameCounter + 1)%60;
+    window.draw(player.hitbox);
+    window.draw(player.gunSprite);
+    window.draw(player.charSprite);
+
 };
 
 //------------------------------------ State------------------------------------//
@@ -129,6 +110,7 @@ void handle_resize (const sf::Event::Resized& resized, sf::RenderWindow& window)
     update_view(window, resized.size);
 }
 
+//Pressing a key
 void handle (const sf::Event::KeyPressed& key, State& state, sf::RenderWindow& window){
     switch (key.scancode){
 
@@ -138,29 +120,27 @@ void handle (const sf::Event::KeyPressed& key, State& state, sf::RenderWindow& w
             toggle_fullscreen(window, state.fullscreen, state.settings);
             break;
         case sf::Keyboard::Scancode::Space :
-            //state.paused = !state.paused;
+            state.paused = !state.paused;
             break;
 
         //Holding direction
         case sf::Keyboard::Scancode::Left :
         case sf::Keyboard::Scancode::A :
             state.player.inputLeft = true;
-            state.player.faceLeft = true; state.player.faceRight = false;
+            state.player.facingRight = false;
             break;
         case sf::Keyboard::Scancode::D :
         case sf::Keyboard::Scancode::Right :
             state.player.inputRight = true;
-            state.player.faceRight = true; state.player.faceLeft = false;
+            state.player.facingRight = true;
             break;
         case sf::Keyboard::Scancode::S :
         case sf::Keyboard::Scancode::Down :
             state.player.inputDown = true;
-            state.player.faceDown = true; state.player.faceUp = false;  
             break;
         case sf::Keyboard::Scancode::W :
         case sf::Keyboard::Scancode::Up :
-            state.player.inputUp = true;
-            state.player.faceUp = true; state.player.faceDown = false;  
+            state.player.inputUp = true;  
             break;
 
         //Action buttons
@@ -171,19 +151,20 @@ void handle (const sf::Event::KeyPressed& key, State& state, sf::RenderWindow& w
             state.player.holdingJump = true;
             break;
         case sf::Keyboard::Scancode::L ://Special
+            state.player.special1 = true;
             break;
         case sf::Keyboard::Scancode::Semicolon ://Special 2
+            state.player.special2 = true;
             break;
         
-        
-        //Default
         default:
             break;
-    
     
     }
 }
 
+
+//Releasing a key
 void handle (const sf::Event::KeyReleased Key, State& state, sf::RenderWindow& window){
     
     //Stopped holding direction
@@ -196,12 +177,11 @@ void handle (const sf::Event::KeyReleased Key, State& state, sf::RenderWindow& w
             break;
         case sf::Keyboard::Scancode::D :
         case sf::Keyboard::Scancode::Right :
-            state.player.inputRight = false;    
+            state.player.inputRight = false;
             break;
         case sf::Keyboard::Scancode::S :
         case sf::Keyboard::Scancode::Down :
             state.player.inputDown = false; 
-            state.player.faceDown = false; 
             break;
         case sf::Keyboard::Scancode::W :
         case sf::Keyboard::Scancode::Up :
@@ -241,8 +221,8 @@ int main(){
     
     toggle_fullscreen(window, state.fullscreen,state.settings);
 
-    state.player.rectangle.setOrigin({rectangleSize.x/2,rectangleSize.y/2});
-    state.player.rectangle.setFillColor(sf::Color::Blue);
+    state.player.hitbox.setOrigin({rectangleSize.x/2,rectangleSize.y/2});
+    state.player.hitbox.setFillColor(sf::Color::Blue);
 
     //Loop
     while (window.isOpen())
@@ -260,6 +240,7 @@ int main(){
         state.update(elapsed);
         state.drawFrame(window);
         window.display ();
+        frameCounter = (frameCounter + 1)%max_frame_rate;
     }
 }
 
