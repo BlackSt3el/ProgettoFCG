@@ -23,5 +23,5 @@ target_compile_options(common INTERFACE
 
 
 # DoukutsuClone
-add_executable(Tappa01 Cartella-Tappa01/doukutsu.cpp Cartella-Tappa01/movement.cpp Cartella-Tappa01/textures.cpp)
+add_executable(Tappa01 Cartella-Tappa01/doukutsu.cpp Cartella-Tappa01/movement.cpp Cartella-Tappa01/textures.cpp Cartella-Tappa01/entity.cpp)
 target_link_libraries(Tappa01 PRIVATE SFML::Graphics SFML::Audio common)

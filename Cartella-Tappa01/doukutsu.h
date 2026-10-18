@@ -1,6 +1,5 @@
 #pragma once
 #include <SFML/Graphics.hpp>
-#include "../Cartella-risorse/textures.hpp"
 #include <iostream>
 #include <cmath>
 #include <algorithm>
