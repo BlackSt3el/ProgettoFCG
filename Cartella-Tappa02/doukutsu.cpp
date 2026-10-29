@@ -57,10 +57,17 @@ struct State
 
     sf::ContextSettings settings;
 
-    Entity player{quoteTexture};
+    Entity player;
 
-    State(){
-        settings.antiAliasingLevel = 8;
+    sf::Texture playerTexture;
+
+    std::vector<Bullet> bullets;
+
+    State(sf::Texture& playerSheet)
+        : player(playerTexture)
+    {
+        playerTexture = playerSheet;
+        settings.antiAliasingLevel = 8;  
     }
 
     void updatePlayer(float elapsed);
@@ -86,13 +93,14 @@ void State::update(float elapsed){
         return;
     }
     updatePlayer(elapsed);
+    updateBullets(player, bullets, elapsed);
 }
 
 void State::drawFrame(sf::RenderWindow& window){
     window.draw(player.hitbox);
     window.draw(player.gunSprite);
     window.draw(player.charSprite);
-
+    drawBullets(window, bullets, playerTexture);
 };
 
 //------------------------------------ State------------------------------------//
@@ -145,6 +153,7 @@ void handle (const sf::Event::KeyPressed& key, State& state, sf::RenderWindow& w
 
         //Action buttons
         case sf::Keyboard::Scancode::J ://Shoot
+            state.player.shooting = true;
             break;
         case sf::Keyboard::Scancode::K ://Jump
             state.player.jumped = true;
@@ -189,10 +198,13 @@ void handle (const sf::Event::KeyReleased Key, State& state, sf::RenderWindow& w
             break;
 
         //Action Buttons
-
+        case sf::Keyboard::Scancode::J ://Jump
+            state.player.shooting = false;
+            break;
         case sf::Keyboard::Scancode::K ://Jump
             state.player.holdingJump = false;
             break;
+        
         //Default
         default:
             break;
@@ -215,13 +227,24 @@ int main(){
     float elapsed;
     sf::Clock clock;
 
-    State state;
-    
+    //Load Textures
+    sf::Texture playerTexture;
+    if(!playerTexture.loadFromFile(quoteTexturePath)){
+        std::cout << "Image Failed to load" << std::endl;
+    }
+
+    //set sound volume
+    sounds::jumpSound.setVolume(20.f);
+    sounds::walkSound.setVolume(20.f);
+    sounds::PSSound.setVolume(5.f);
+
+    State state(playerTexture);
+
     sf::RenderWindow window;
     
     toggle_fullscreen(window, state.fullscreen,state.settings);
 
-    state.player.hitbox.setOrigin({rectangleSize.x/2,rectangleSize.y/2});
+    state.player.hitbox.setOrigin({hitboxSize.x/2,hitboxSize.y/2});
     state.player.hitbox.setFillColor(sf::Color::Blue);
 
     //Loop
@@ -236,7 +259,7 @@ int main(){
         // handle events
 
         elapsed = clock.restart().asSeconds();
-        window.clear (sf::Color::White);
+        window.clear (sf::Color::Black);
         state.update(elapsed);
         state.drawFrame(window);
         window.display ();

@@ -26,5 +26,6 @@ target_compile_options(common INTERFACE
 add_executable(Tappa01 Cartella-Tappa01/doukutsu.cpp Cartella-Tappa01/movement.cpp Cartella-Tappa01/textures.cpp Cartella-Tappa01/entity.cpp)
 target_link_libraries(Tappa01 PRIVATE SFML::Graphics SFML::Audio common)
 
-add_executable(Tappa02 Cartella-Tappa02/doukutsu.cpp Cartella-Tappa02/movement.cpp Cartella-Tappa02/textures.cpp Cartella-Tappa02/entity.cpp)
+add_executable(Tappa02 Cartella-Tappa02/doukutsu.cpp Cartella-Tappa02/movement.cpp Cartella-Tappa02/textures.cpp Cartella-Tappa02/entity.cpp Cartella-Tappa02/bullet.cpp
+  Cartella-Tappa02/sound.cpp)
 target_link_libraries(Tappa02 PRIVATE SFML::Graphics SFML::Audio common)

@@ -1,8 +1,5 @@
 #include "movement.h"
 
-sf::SoundBuffer buffer("./../Cartella-risorse/Cave Story - Miscellaneous Sounds/ID17_snd_thud.wav");
-sf::Sound sound(buffer);
-
 void moveVelCheck(Entity& entity, float elapsed){
     
     //directional movement
@@ -12,14 +9,13 @@ void moveVelCheck(Entity& entity, float elapsed){
     //Friction
     
     if(entity.grounded&&((!entity.inputLeft&&!entity.inputRight)||(entity.inputLeft&&entity.inputRight)))entity.xvel *= std::pow(0.8f,elapsed*60.f);//multypling by 60 makes it so that physics are consistent with any frame rate, 60 are the ticks that should pass in a second
-
     entity.xvel = std::clamp(entity.xvel, -entity_velocity_cap, entity_velocity_cap);
 
     //jumping logic
     if(entity.jumped && entity.grounded){
         entity.yvel = -min_jump_speed;
         entity.grounded = false;
-        sound.play();
+        sounds::jumpSound.play();
     }
     entity.jumped = false;
 
@@ -34,7 +30,7 @@ void moveVelCheck(Entity& entity, float elapsed){
 }
 
 void boundaryCheck(Entity& entity, float height, float width){
-    if(entity.grounded == false && entity.pos.y >= window_height-height/2.f){entity.grounded = true;sound.play();}
+    if(entity.grounded == false && entity.pos.y >= window_height-height/2.f){entity.grounded = true; sounds::walkSound.play();}
     entity.pos.x = std::clamp(entity.pos.x, width/2.f, window_width - width/2.f);
     entity.pos.y = std::clamp(entity.pos.y, height/2.f, window_height - height/2.f);
 }
@@ -45,7 +41,7 @@ void directionCheck(Entity& e){
     if(e.grounded && e.inputDown && !e.inputUp && !e.inputLeft && !e.inputRight)
         e.turnBack = true;
 
-    if(e.inputLeft || e.inputRight || e.inputUp || e.jumped || !e.grounded || e.special1 || e.special2)
+    if(e.inputLeft || e.inputRight || e.inputUp || e.jumped || !e.grounded || e.special1 || e.special2 || e.shooting)
         e.turnBack = false;
     
     if(e.inputLeft && !e.inputRight) right = false;

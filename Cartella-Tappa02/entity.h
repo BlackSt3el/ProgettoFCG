@@ -4,19 +4,21 @@
 
 struct Entity
 {    
-    sf::RectangleShape hitbox{rectangleSize};
+    sf::RectangleShape hitbox{hitboxSize};
 
     sf::Vector2f pos = {0,0};
 
-    sf::Texture texture;
+    sf::Sprite charSprite;
 
-    sf::Sprite charSprite{texture};
+    sf::Sprite gunSprite;
 
-    sf::Sprite gunSprite{texture};
+    int gunID = 0;
     
     //Player is going in a direction
     bool inputUp = false, inputDown = false, inputLeft = false, inputRight = false;
     bool facingRight = true; bool turnBack = false;   
+    //Action flags
+    bool shooting = false;
     bool special1 = false; bool special2 = false;
 
     //Player is looking in a direction
@@ -33,7 +35,7 @@ struct Entity
     float animTimer = 0.f;
     int animFrame = 0;
 
-    Entity(std::string texturePath);
+    Entity(sf::Texture& texture);
 };
 
 void updateEntity(Entity& e, float elapsed);

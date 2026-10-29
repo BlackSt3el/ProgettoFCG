@@ -1,7 +1,4 @@
 #include "textures.h"
-
-
-
 //----------------------- Quote --------------------------//
     //Textures, Quote is 14x16 top left corner at 68,122, Polar Star is 9x3 at top left corner at 53,11
     //68, 122
@@ -9,6 +6,7 @@
     //245, 121
     //67, 186
     //The area with the sprites has the top left angle in 68,120 and the size is 176, 66
+    //Polar star shots are 16x16 and 128,232 is the left corner of the horizontal one
 
 void quoteSpriteDirection(Entity& player, sf::Sprite& quoteSprite, sf::Sprite& gunSprite){
 
@@ -46,23 +44,20 @@ void quoteSpriteDirection(Entity& player, sf::Sprite& quoteSprite, sf::Sprite& g
 }
 
 void quoteCycleSprite(int XIndex, int YIndex, sf::Sprite& quoteSprite){
-    quoteSprite.setTextureRect(sf::IntRect({XIndex*QUOTE_WIDTH+QUOTE_ORIGIN.x,YIndex*QUOTE_HEIGHT+QUOTE_ORIGIN.y}, {QUOTE_WIDTH, QUOTE_HEIGHT}));
+    quoteSprite.setTextureRect(sf::IntRect({XIndex*SPRITE_WIDTH+QUOTE_ORIGIN.x,YIndex*SPRITE_HEIGHT+QUOTE_ORIGIN.y}, {SPRITE_WIDTH, SPRITE_HEIGHT}));
 }
-
-
 
 
 void gunUpdateSprite(Entity& player){
     const GunPosition& currentGun = polarStar[static_cast<int>(player.direction) ];
     player.gunSprite.setTextureRect(currentGun.rect);
     player.gunSprite.setOrigin({currentGun.rect.size.x/2.f, currentGun.rect.size.y/2.f});
-    player.gunSprite.setScale({scale,scale});
 
     float walkingOffset = (player.grounded&&(player.animFrame == 1 || player.animFrame == 3)) ? -1.f : 0.f;//Quote goes up and down by 1 pixel during his walk cycle in frames 1 and 3
 
     player.gunSprite.setPosition({
-        player.pos.x + currentGun.offset.x*scale, 
-        player.pos.y + (currentGun.offset.y+walkingOffset)*scale
+        player.pos.x + currentGun.offset.x, 
+        player.pos.y + (currentGun.offset.y+walkingOffset)
     });
 }
 
@@ -73,6 +68,7 @@ void quoteUpdateAnimation(Entity& e, float elapsed){
         while(e.animTimer >= FrameTime){
             e.animTimer -= FrameTime;
             e.animFrame = (e.animFrame+1) % 4;    
+            sounds::walkSound.play();
         }
     } 
     else{

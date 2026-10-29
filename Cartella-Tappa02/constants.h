@@ -5,7 +5,6 @@
 //Window settings
 const int window_width = 640;
 const int window_height = 360;
-const float scale = 3;//increase size of objects and mantain ratio
 const int max_frame_rate = 180;
 
 //Physics
@@ -21,18 +20,24 @@ enum class Directions {Left, Right, UpRight, UpLeft, DownRight, DownLeft};
 const float FrameTime = 0.2f; //seconds per frame of animations
 
 //Quote data
-const int QUOTE_WIDTH = 16; 
-const int QUOTE_HEIGHT = 16;
+const int SPRITE_WIDTH = 16; 
+const int SPRITE_HEIGHT = 16;
 const sf::Vector2i QUOTE_ORIGIN{68,122};
-const std::string quoteTexture= "./../Cartella-risorse/DoukutsuCharSprites.png";
-const sf::Vector2f rectangleSize = {QUOTE_WIDTH*scale, QUOTE_HEIGHT*scale};
+const std::string quoteTexturePath= "./../Cartella-risorse/DoukutsuCharSprites.png";
+const sf::Vector2f hitboxSize = {SPRITE_WIDTH, SPRITE_HEIGHT};
 
+//Bullet data
+const float bullet_speed = 600.f;
+const float bullet_lifetime = 0.25f;   // seconds; speed * lifetime = range
+const int   max_bullets = 100;
 
 //Guns
 struct GunPosition {
     sf::IntRect rect;      // position and size in the texture sheet
     sf::Vector2f offset;   // hand position from the character's center, in unscaled pixels
 };
+
+//------------------------------------ Polar Star ------------------------------------//
 
 //polar star is 9x3 and the right looking one is at 58,27
 static const GunPosition polarStar[6] ={
@@ -43,3 +48,7 @@ static const GunPosition polarStar[6] ={
     {sf::IntRect ({55,87}, {3,7}), sf::Vector2f({0.5f, 6.5f})},//downRight
     {sf::IntRect ({62,71}, {3,7}), sf::Vector2f({-0.5f, 6.5f})},//downLeft
 };
+
+const sf::IntRect PSspritePos{{128,232},{SPRITE_WIDTH, SPRITE_HEIGHT}};
+
+//------------------------------------ Polar Star ------------------------------------//

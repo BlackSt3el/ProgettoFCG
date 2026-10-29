@@ -1,5 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
+#include "sound.h"
 #include "constants.h"
 #include "entity.h"
 

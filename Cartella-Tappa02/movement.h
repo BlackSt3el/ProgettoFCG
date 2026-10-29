@@ -1,9 +1,9 @@
 #pragma once
 #include "entity.h"
 #include "constants.h"
+#include "sound.h"
 #include <algorithm>
 #include <cmath>
-#include <SFML/Audio.hpp>
 
 void moveVelCheck(Entity& entity, float elapsed);
 void updateDirections(Entity& e);
