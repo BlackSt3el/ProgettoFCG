@@ -9,5 +9,6 @@
 #include "textures.h"
 #include "bullet.h"
 #include "sound.h"
+#include "tiles.h"
 
 void toggle_fullscreen(sf::RenderWindow& window, bool fullscreen, sf::ContextSettings settings);

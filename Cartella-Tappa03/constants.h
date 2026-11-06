@@ -4,7 +4,7 @@
 
 //Window settings
 const int window_width = 640;
-const int window_height = 360;
+const int window_height = 352;
 const int max_frame_rate = 180;
 
 //Physics

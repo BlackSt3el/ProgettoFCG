@@ -10,6 +10,3 @@ void quoteSpriteDirection(Entity& player, sf::Sprite& quoteSprite,  sf::Sprite& 
 void gunUpdateSprite(Entity& gunSprite);
 void quoteUpdateAnimation(Entity& e, float elapsed);
 int selectAnimationFrame(Entity& e, int idle, int walk1, int walk2);
-
-
-

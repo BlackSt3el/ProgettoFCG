@@ -96,7 +96,7 @@ void State::update(float elapsed){
     updateBullets(player, bullets, elapsed);
 }
 
-void State::drawFrame(sf::RenderWindow& window){
+void State::drawFrame(sf::RenderWindow& window){ 
     window.draw(player.hitbox);
     window.draw(player.gunSprite);
     window.draw(player.charSprite);
@@ -247,6 +247,21 @@ int main(){
     state.player.hitbox.setOrigin({hitboxSize.x/2,hitboxSize.y/2});
     state.player.hitbox.setFillColor(sf::Color::Blue);
 
+//------------------------------------ background try ------------------------------------//
+
+    // define the level with an array of tile indices
+    std::vector<int> level;
+    unsigned width, height;
+    if(!loadCsvLevel("./../Cartella-risorse/Cave Story TileMaps/FirstCave.csv", level, width, height))
+        return-1;
+    // create the tilemap from the level definition
+    TileMap map;
+    if (!map.load("./../Cartella-risorse/Cave Story - Backgrounds - First Cave.png", {16, 16}, level.data(), width, height))
+        return -1;
+
+//------------------------------------ background try ------------------------------------//
+
+
     //Loop
     while (window.isOpen())
     {
@@ -261,8 +276,11 @@ int main(){
         elapsed = clock.restart().asSeconds();
         window.clear (sf::Color::Black);
         state.update(elapsed);
+        //going for the background
+        window.draw(map);
+        //going for the background
         state.drawFrame(window);
-        window.display ();
+        window.display();
         frameCounter = (frameCounter + 1)%max_frame_rate;
     }
 }
