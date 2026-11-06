@@ -33,3 +33,7 @@ target_link_libraries(Tappa02 PRIVATE SFML::Graphics SFML::Audio common)
 add_executable(Tappa03 Cartella-Tappa03/doukutsu.cpp Cartella-Tappa03/movement.cpp Cartella-Tappa03/textures.cpp Cartella-Tappa03/entity.cpp Cartella-Tappa03/bullet.cpp
   Cartella-Tappa03/sound.cpp Cartella-Tappa03/tiles.cpp)
 target_link_libraries(Tappa03 PRIVATE SFML::Graphics SFML::Audio common)
+
+add_executable(Tappa04 Cartella-Tappa04/doukutsu.cpp Cartella-Tappa04/movement.cpp Cartella-Tappa04/textures.cpp Cartella-Tappa04/entity.cpp Cartella-Tappa04/bullet.cpp
+  Cartella-Tappa04/sound.cpp Cartella-Tappa04/tiles.cpp)
+target_link_libraries(Tappa04 PRIVATE SFML::Graphics SFML::Audio common)
