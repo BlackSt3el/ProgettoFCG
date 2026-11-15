@@ -10,7 +10,7 @@ int frameCounter = 0;
 
 void update_view(sf::RenderWindow& window, sf::Vector2u size){
 
-    float aspect = static_cast<float>(window_width)/static_cast<float>(window_height);
+    float aspect = levelSize.x/levelSize.y;
     float new_aspect = static_cast<float>(size.x)/static_cast<float>(size.y);
 
     sf::FloatRect viewport({0.f, 0.f}, {1.f, 1.f});
@@ -25,7 +25,7 @@ void update_view(sf::RenderWindow& window, sf::Vector2u size){
         viewport.size.y = new_aspect/aspect;
         viewport.position.y = (1.f - viewport.size.y)/2.f;
     }
-    sf::View view(sf::FloatRect({0.f, 0.f}, {static_cast<float>(window_width), static_cast<float>(window_height)}));
+    sf::View view(sf::FloatRect({0.f, 0.f}, levelSize));
     view.setViewport(viewport);
     window.setView(view);
 }
@@ -63,32 +63,37 @@ struct State
 
     std::vector<Bullet> bullets;
 
+    Level level;
+
     State(sf::Texture& playerSheet)
         : player(playerTexture)
     {
+        player.hitbox.setOrigin({hitboxSize.x/2,hitboxSize.y/2});
+        player.hitbox.setFillColor(sf::Color::Blue);
         playerTexture = playerSheet;
         settings.antiAliasingLevel = 8;  
+        player.pos = levelSize/2.f;
+        player.hitbox.setPosition(player.pos);
     }
 
     void updatePlayer(float elapsed);
-    void update(float elapsed);
+    void update(float elapsed, sf::RenderWindow& window);
     void drawFrame(sf::RenderWindow& window);
     void restart();
 };
 
 void State::updatePlayer(float elapsed){
-    updateEntity(player, elapsed);
+    updateEntity(player, elapsed, level);
 
     quoteSpriteDirection(player,player.charSprite, player.gunSprite);
 
     quoteUpdateAnimation(player, elapsed);
     
-    player.hitbox.setPosition(player.pos);
     player.charSprite.setPosition(player.pos);
     gunUpdateSprite(player);
 }
 
-void State::update(float elapsed){ 
+void State::update(float elapsed, sf::RenderWindow& window){ 
     if(paused) {
         return;
     }
@@ -97,6 +102,10 @@ void State::update(float elapsed){
 }
 
 void State::drawFrame(sf::RenderWindow& window){ 
+    //going for the background
+    window.draw(level.decorationLevelSprites);
+    window.draw(level.solidLevelSprites);
+    //going for the background
     window.draw(player.hitbox);
     window.draw(player.gunSprite);
     window.draw(player.charSprite);
@@ -114,12 +123,12 @@ void handle_close (sf::RenderWindow& window){
 };
 
 void handle_resize (const sf::Event::Resized& resized, sf::RenderWindow& window){   // constrain aspect ratio and map always the same portion of the world
-
     update_view(window, resized.size);
 }
 
 //Pressing a key
 void handle (const sf::Event::KeyPressed& key, State& state, sf::RenderWindow& window){
+    sf::View view;
     switch (key.scancode){
 
         //Settings hotkeys
@@ -166,9 +175,15 @@ void handle (const sf::Event::KeyPressed& key, State& state, sf::RenderWindow& w
             state.player.special2 = true;
             break;
         
+        //DELETE THIS, TRYING TO MOVE VIEWPORT WORLD AND WINDOW
+        case sf::Keyboard::Scancode::U : 
+            view = window.getView();
+            view.setCenter({view.getCenter().x+1,view.getCenter().y+1});
+            window.setView(view);
+            break;
+            
         default:
             break;
-    
     }
 }
 
@@ -238,29 +253,41 @@ int main(){
     sounds::walkSound.setVolume(20.f);
     sounds::PSSound.setVolume(5.f);
 
+    //------------------------------------ background try ------------------------------------//
+    // define the level with an array of tile indices
+    std::vector<int> levelDeco, levelSolid;
+    TileMap mapDeco, mapSolid;
+    Level level;
+    unsigned width, height;
+    if(!loadCsvLevel("./../Cartella-risorse/Cave Story TileMaps/FirstCave_DecorationLayer.csv", levelDeco, width, height))
+        return-1;
+    level.decorationLevelIDs = levelDeco;
+    if(!loadCsvLevel("./../Cartella-risorse/Cave Story TileMaps/FirstCave_SolidBlocksLayer.csv", levelSolid, width, height))
+        return-1;
+    level.solidLevelIDs = levelSolid;
+    // create the tilemap from the level definition
+    
+    if (!mapDeco.load("./../Cartella-risorse/Cave Story - Backgrounds - First Cave.png", {16, 16}, levelDeco.data(), width, height))
+        return -1;
+    level.decorationLevelSprites = mapDeco;
+    if (!mapSolid.load("./../Cartella-risorse/Cave Story - Backgrounds - First Cave.png", {16, 16}, levelSolid.data(), width, height))
+        return -1;
+    level.solidLevelSprites = mapSolid;
+    level.width = width;
+    level.height = height;
+    levelSize = {width*16.f, height*16.f};
+    //------------------------------------ background try ------------------------------------//
+
     State state(playerTexture);
+    state.level = level;
 
     sf::RenderWindow window;
+
+   
     
     toggle_fullscreen(window, state.fullscreen,state.settings);
 
-    state.player.hitbox.setOrigin({hitboxSize.x/2,hitboxSize.y/2});
-    state.player.hitbox.setFillColor(sf::Color::Blue);
-
-//------------------------------------ background try ------------------------------------//
-
-    // define the level with an array of tile indices
-    std::vector<int> level;
-    unsigned width, height;
-    if(!loadCsvLevel("./../Cartella-risorse/Cave Story TileMaps/FirstCave.csv", level, width, height))
-        return-1;
-    // create the tilemap from the level definition
-    TileMap map;
-    if (!map.load("./../Cartella-risorse/Cave Story - Backgrounds - First Cave.png", {16, 16}, level.data(), width, height))
-        return -1;
-
-//------------------------------------ background try ------------------------------------//
-
+    clock.restart();
 
     //Loop
     while (window.isOpen())
@@ -272,13 +299,10 @@ int main(){
             [&state, &window](const auto& event) { handle (event, state, window); }//utilizza il polimorfismo per scegliere la handle giusta a seconda del tipo
         );
         // handle events
-
-        elapsed = clock.restart().asSeconds();
+        
+        elapsed = std::min(clock.restart().asSeconds(),1/60.f);//prevents the game logic from advancing without updating during long loading times or lag
         window.clear (sf::Color::Black);
-        state.update(elapsed);
-        //going for the background
-        window.draw(map);
-        //going for the background
+        state.update(elapsed, window);
         state.drawFrame(window);
         window.display();
         frameCounter = (frameCounter + 1)%max_frame_rate;

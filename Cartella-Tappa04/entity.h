@@ -1,6 +1,7 @@
 #pragma once
 #include <SFML/Graphics.hpp>
 #include "constants.h"
+#include "tiles.h"
 
 struct Entity
 {    
@@ -38,4 +39,4 @@ struct Entity
     Entity(sf::Texture& texture);
 };
 
-void updateEntity(Entity& e, float elapsed);
+void updateEntity(Entity& e, float elapsed, Level& level);

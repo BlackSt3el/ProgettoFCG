@@ -73,3 +73,19 @@ private:
     sf::VertexArray m_vertices;
     sf::Texture     m_tileset;
 };
+
+struct Level
+{
+    std::vector<int> solidLevelIDs;
+    std::vector<int> decorationLevelIDs;
+    TileMap solidLevelSprites;
+    TileMap decorationLevelSprites;
+    int width = 0, height = 0;
+    //Converts 1D array coordinates into 2D array coordinates and checks if tile should be solid or not
+    bool isSolid(int tx, int ty){
+        if(tx<0 || ty<0 || tx >= width || ty>= height)return false;
+        unsigned index = ty*width + tx;
+        if(index > solidLevelIDs.size())return false;
+        return solidLevelIDs[ty*width + tx]>=0;
+    }
+};

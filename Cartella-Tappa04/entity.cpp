@@ -1,7 +1,6 @@
 #include "entity.h"
 #include "textures.h"
 #include "movement.h"
-#include <iostream>
 
 
 Entity::Entity(sf::Texture& texture)
@@ -15,11 +14,11 @@ Entity::Entity(sf::Texture& texture)
 }
 
 
-void updateEntity(Entity& e, float elapsed){
+void updateEntity(Entity& e, float elapsed, Level& level){
     
-    moveVelCheck(e, elapsed);
+    moveVelCheck(e, elapsed, level);
 
-    boundaryCheck(e, e.hitbox.getSize().x, e.hitbox.getSize().y);
+    boundaryCheck(e, e.hitbox.getSize().x, e.hitbox.getSize().y, level);
 
     directionCheck(e);
 }

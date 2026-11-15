@@ -5,15 +5,17 @@
 //Window settings
 const int window_width = 640;
 const int window_height = 352;
+inline sf::Vector2f levelSize{static_cast<float>(window_width), static_cast<float>(window_height)};//Making the view fit the level when loaded
 const int max_frame_rate = 180;
 
 //Physics
 const float accel = 1500.f;
 const float entity_velocity_cap = 120.f;
-const float min_jump_speed = 480.f;
-const float gravity_held = 900.f;
-const float gravity = 2200.f;
-const float max_fall_speed= 700.f;
+const float min_jump_speed = 240.f;
+const float gravity_held = 450.f;
+const float gravity = 1100.f;
+const float max_fall_speed= 350.f;
+const float delta = 0.001f;//Small difference in position, otherwise collision on the y axis would be too strict 
 
 //Textures
 enum class Directions {Left, Right, UpRight, UpLeft, DownRight, DownLeft};
@@ -24,7 +26,7 @@ const int SPRITE_WIDTH = 16;
 const int SPRITE_HEIGHT = 16;
 const sf::Vector2i QUOTE_ORIGIN{68,122};
 const std::string quoteTexturePath= "./../Cartella-risorse/DoukutsuCharSprites.png";
-const sf::Vector2f hitboxSize = {SPRITE_WIDTH, SPRITE_HEIGHT};
+const sf::Vector2f hitboxSize = {SPRITE_WIDTH-2, SPRITE_HEIGHT};
 
 //Bullet data
 const float bullet_speed = 600.f;
