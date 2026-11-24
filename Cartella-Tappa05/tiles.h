@@ -2,11 +2,21 @@
 
 #include <SFML/Graphics.hpp>
 #include "constants.h"
+#include <algorithm>
 #include <fstream>
 #include <sstream>
 #include <vector>
 
-enum class TileType {Empty, Solid, SlopeUp, SlopeDown};
+enum class TileType {
+    Empty, Solid,
+    
+    SlopeRightBottom, SlopeRightTop, SlopeLeftBottom, SlopeLeftTop,
+
+    CeilRightBottom, CeilRightTop, CeilLeftBottom, CeilLeftTop
+};
+
+inline bool isFloorSlope(TileType t){return t >= TileType::SlopeRightBottom&&t <= TileType::SlopeLeftTop;}
+inline bool isCeilSlope(TileType t){return t >= TileType::CeilRightBottom&&t <= TileType::CeilLeftTop;}
 
 bool loadCsvLevel(std::string csvPath, std::vector<int>& tiles, unsigned& width, unsigned& height);
 
@@ -88,7 +98,21 @@ struct Level
         if(tx<0 || ty<0 || tx >= width || ty>= height)return TileType::Empty;
         unsigned index = ty*width + tx;
         int TileID = solidLevelIDs[index]; 
+        
+        //Ceiling slope tiles
+        if(TileID==3)return TileType::CeilLeftTop;
+        if(TileID==2)return TileType::CeilLeftBottom;
+        if(TileID==5)return TileType::CeilRightBottom;
+        if(TileID==4)return TileType::CeilRightTop;
+        
+        //Floor slope tiles
+        if(TileID==18)return TileType::SlopeLeftTop;
+        if(TileID==19)return TileType::SlopeLeftBottom;
+        if(TileID==20)return TileType::SlopeRightBottom;
+        if(TileID==21)return TileType::SlopeRightTop;
+        
         if(TileID<0)return TileType::Empty;
+        
         else return TileType::Solid; 
     }
 
@@ -96,3 +120,5 @@ struct Level
         return evaluateType(tx, ty) == TileType::Solid;
     }
 };
+
+float slopeTileHeight(TileType t, int tx, int ty, float xPos);

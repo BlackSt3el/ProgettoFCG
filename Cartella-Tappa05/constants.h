@@ -10,13 +10,17 @@ inline sf::Vector2f levelSize{viewSize};//Size of the entire tilemap, is overwri
 const int max_frame_rate = 180;
 
 //Physics
-const float accel = 1500.f;
-const float entity_velocity_cap = 120.f;
-const float min_jump_speed = 240.f;
-const float gravity_held = 450.f;
-const float gravity = 1100.f;
-const float max_fall_speed= 350.f;
+const float accel = 415.f;
+const float air_accel = 155.f;
+const float entity_velocity_cap = 80.f;
+const float friction = 250.f;
+const float jump_speed = 125.f;
+const float gravity_held = 155.f;
+const float gravity = 390.f;
+const float max_fall_speed= 150.f;
 const float delta = 0.001f;//Small difference in position, otherwise collision on the y axis would be too strict 
+const float slope_snap_distance = 4.f; // max drop (px) the player is glued to a slope when walking down
+const float wall_margin = 3.f;
 
 //Textures
 enum class Directions {Left, Right, UpRight, UpLeft, DownRight, DownLeft};
@@ -27,7 +31,7 @@ const int SPRITE_WIDTH = 16;
 const int SPRITE_HEIGHT = 16;
 const sf::Vector2i QUOTE_ORIGIN{68,122};
 const std::string quoteTexturePath= "./../Cartella-risorse/DoukutsuCharSprites.png";
-const sf::Vector2f hitboxSize = {SPRITE_WIDTH-2, SPRITE_HEIGHT};
+const sf::Vector2f hitboxSize = {SPRITE_WIDTH/2, SPRITE_HEIGHT};
 
 //Bullet data
 const float bullet_speed = 600.f;

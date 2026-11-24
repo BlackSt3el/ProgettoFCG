@@ -1,34 +1,43 @@
 #include "movement.h"
 
 void moveVelCheck(Entity& entity, float elapsed, Level& level){
-    
-    //directional movement
 
+//------------------------------- directional movement ------------------------------//
     if(entity.inputLeft)entity.xvel -= accel*elapsed;
     if(entity.inputRight)entity.xvel += accel*elapsed;
-    
-    //Friction
-    
-    if(entity.grounded&&((!entity.inputLeft&&!entity.inputRight)||(entity.inputLeft&&entity.inputRight)))entity.xvel *= std::pow(0.8f,elapsed*60.f);//multypling by 60 makes it so that physics are consistent with any frame rate, 60 are the ticks that should pass in a second
-    entity.xvel = std::clamp(entity.xvel, -entity_velocity_cap, entity_velocity_cap);
+//------------------------------- directional movement ------------------------------//
 
-    //jumping logic
+//------------------------------ Friction --------------------------------------------//    
+    float acc = entity.grounded ? accel : air_accel;
+    if (entity.inputLeft) entity.xvel -= acc*elapsed;
+    if (entity.inputRight) entity.xvel += acc*elapsed;
+    if(entity.grounded&&(entity.inputLeft==entity.inputRight)){
+        float decel = elapsed*friction;
+        if(std::abs(entity.xvel)<=decel)entity.xvel = 0.f;
+        else entity.xvel -= std::copysign(decel, entity.xvel); 
+    }
+    entity.xvel = std::clamp(entity.xvel, -entity_velocity_cap, entity_velocity_cap);
+//------------------------------ Friction --------------------------------------------//
+
+//----------------------- jumping logic ---------------------------//
     if(entity.jumped && entity.grounded){
-        entity.yvel = -min_jump_speed;
+        entity.yvel = -jump_speed;
         entity.grounded = false;
         sounds::jumpSound.play();
     }
     entity.jumped = false;
+//----------------------- jumping logic ---------------------------//
 
-    //gravity
+//-------------------------------------------------------- gravity ------------------------------------------------//
     float g = (entity.holdingJump && entity.yvel<0) ? gravity_held : gravity;//different gravity depending on holding jump
     entity.yvel += g*elapsed;
+    entity.yvel = std::clamp(entity.yvel, -jump_speed, max_fall_speed);
+//-------------------------------------------------------- gravity ------------------------------------------------//
 
-    entity.yvel = std::clamp(entity.yvel, -min_jump_speed, max_fall_speed);
-
-    entity.pos.x += entity.xvel*elapsed;
-    //Check touched tiles
+//--------------------------------------- Check touched tiles X Axis ------------------------------//
     //Compute edges of player rectangle
+    entity.pos.x += entity.xvel*elapsed;
+
     float left   = entity.pos.x - hitboxSize.x / 2.f;
     float right  = entity.pos.x + hitboxSize.x / 2.f - delta;
     float top    = entity.pos.y - hitboxSize.y / 2.f;
@@ -36,12 +45,12 @@ void moveVelCheck(Entity& entity, float elapsed, Level& level){
     //Convert the edges to the adjecent tiles
     int leftTile = static_cast<int>(std::floor(left/16.f));
     int rightTile = static_cast<int>(std::floor(right/16.f));
-    int topTile = static_cast<int>(std::floor(top/16.f));
-    int bottomTile = static_cast<int>(std::floor(bottom/16.f));
+    int wallTopTile    = static_cast<int>(std::floor((top    + wall_margin)/16.f));
+    int wallBottomTile = static_cast<int>(std::floor((bottom - wall_margin)/16.f));
 
     //Going to the right
     if(entity.xvel > 0){
-        for(int ty = topTile; ty <= bottomTile; ty++){
+        for(int ty = wallTopTile; ty <= wallBottomTile; ty++){
             if(level.isSolid(rightTile , ty)){
                 entity.xvel = 0;
                 entity.pos.x = (rightTile)*16.f-hitboxSize.x/2;
@@ -50,18 +59,21 @@ void moveVelCheck(Entity& entity, float elapsed, Level& level){
     }
     //Going to the left
     else if(entity.xvel < 0){
-        for(int ty = topTile; ty <= bottomTile; ty++){
+        for(int ty = wallTopTile; ty <= wallBottomTile; ty++){
             if(level.isSolid(leftTile, ty)){
                 entity.xvel = 0;
-                entity.pos.x = (rightTile)*16.f+hitboxSize.x/2;
+                entity.pos.x = (leftTile+1)*16.f+hitboxSize.x/2;
             }
         }
     }
+//--------------------------------------- Check touched tiles X Axis ------------------------------//
 
     
-    entity.pos.y += entity.yvel*elapsed;
-    //Check touched tiles
+    
+//---------------------------------------------------- Check touched tiles Y Axis ----------------------------------------------//
     //Recompute edges of player rectangle since it was moved
+    entity.pos.y += entity.yvel*elapsed;
+
     left   = entity.pos.x - hitboxSize.x / 2.f;
     right  = entity.pos.x + hitboxSize.x / 2.f - delta;
     top    = entity.pos.y - hitboxSize.y / 2.f;
@@ -69,9 +81,10 @@ void moveVelCheck(Entity& entity, float elapsed, Level& level){
 
     leftTile = static_cast<int>(std::floor(left/16.f));
     rightTile = static_cast<int>(std::floor(right/16.f));
-    topTile = static_cast<int>(std::floor(top/16.f));
-    bottomTile = static_cast<int>(std::floor(bottom/16.f));
+    float topTile = static_cast<int>(std::floor(top/16.f));
+    float bottomTile = static_cast<int>(std::floor(bottom/16.f));
     
+    bool wasGrounded = entity.grounded;
     entity.grounded = false;//every frame default to fall and set it true if collision is detected
     //falling onto the floor
     if(entity.yvel > 0){
@@ -92,6 +105,52 @@ void moveVelCheck(Entity& entity, float elapsed, Level& level){
             }
         }
     }
+//---------------------------------------------------- Check touched tiles Y Axis ----------------------------------------------//
+
+
+//-------------------------------------- ground slope checks ---------------------------------------//
+if(entity.yvel>=0){
+    float playerBottomY = entity.pos.y + hitboxSize.y/2.f;
+    //on which tile is the entity standing
+    int bottomTx = std::floor(entity.pos.x/16.f);
+    int bottomTy = std::floor((playerBottomY-delta)/16.f);     
+
+    if(!isFloorSlope(level.evaluateType(bottomTx, bottomTy)))bottomTy++;
+    TileType t = level.evaluateType(bottomTx,bottomTy);
+    if(isFloorSlope(t))
+    {
+        float slopeY = slopeTileHeight(t , bottomTx, bottomTy, entity.pos.x);
+        bool landed = playerBottomY >= slopeY;
+        bool stuck = wasGrounded && slopeY - playerBottomY <= slope_snap_distance;
+        if(landed || stuck)
+        {
+            entity.pos.y = slopeY - hitboxSize.y/2.f;
+            entity.yvel = 0;
+            entity.grounded = true;
+        }
+    }
+}
+//-------------------------------------- ground slope checks ---------------------------------------//
+
+//----------------------------------------------------- Ceiling slope check -----------------------------------------------//
+    float headY = entity.pos.y - hitboxSize.y/2.f;
+    //on which tile is the entity standing
+    int topTx = std::floor(entity.pos.x/16.f);
+    int topTy = std::floor((headY)/16.f);     
+
+    TileType t = level.evaluateType(topTx,topTy);
+    if(isCeilSlope(t))
+    {
+        float slopeY = slopeTileHeight(t , topTx, topTy, entity.pos.x);
+        if(headY < slopeY){ 
+            if(entity.yvel<=0 && !entity.grounded)
+            {
+                entity.pos.y = slopeY + hitboxSize.y/2.f;
+                entity.yvel = 0;
+            }
+        }
+    }
+//----------------------------------------------------- Ceiling slope check -----------------------------------------------//
 }
 
 void boundaryCheck(Entity& entity, float width, float height, Level& level){
